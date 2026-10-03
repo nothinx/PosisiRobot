@@ -11,5 +11,6 @@ jarakKe	KEYWORD2
 arahKe	KEYWORD2
 selisihArahKe	KEYWORD2
 aturArah	KEYWORD2
+aturPosisi	KEYWORD2
 reset	KEYWORD2
 aturUkuran	KEYWORD2
