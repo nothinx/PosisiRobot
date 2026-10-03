@@ -38,13 +38,16 @@ public:
   // --- Koreksi ---
   // Timpa arah, misalnya dari IMU: posisi.aturArah(imu.arah()).
   void aturArah(float derajat);
+  // Timpa posisi (cm), misalnya saat robot melewati penanda yang letaknya
+  // diketahui (garis, tag, dinding). Arah dan jarak tempuh tidak berubah.
+  void aturPosisi(float x, float y) { _x = x; _y = y; }
   // Posisi & arah kembali ke 0. Counter encoder tidak perlu di-nol-kan.
   void reset();
   // Hasil kalibrasi: diameter roda kiri & kanan boleh sedikit berbeda.
   void aturUkuran(float diameterKiri, float diameterKanan, float jarakRoda);
 
 private:
-  float _cmKiri, _cmKanan, _jarak, _pulsa;  // cm per pulsa, cm, pulsa per putaran
+  float _cmKiri, _cmKanan, _perJarak, _pulsa;  // cm per pulsa, 1 / jarak roda (cm), pulsa per putaran
   float _x = 0, _y = 0, _sudut = 0, _tempuh = 0; // _sudut dalam radian, 0..2pi
   long _kiriLalu = 0, _kananLalu = 0;
   bool _siap = false; // hitungan awal sudah dicatat

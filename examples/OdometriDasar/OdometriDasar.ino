@@ -24,13 +24,13 @@ PosisiRobot posisi(6.5, 15.0, 374);
 volatile long pulsaKiri = 0, pulsaKanan = 0;
 
 void encoderKiri() {
-  if (digitalRead(KIRI_B)) pulsaKiri++;
-  else pulsaKiri--;
+  if (digitalRead(KIRI_B)) pulsaKiri = pulsaKiri + 1;
+  else pulsaKiri = pulsaKiri - 1;
 }
 
 void encoderKanan() {
-  if (digitalRead(KANAN_B)) pulsaKanan++;
-  else pulsaKanan--;
+  if (digitalRead(KANAN_B)) pulsaKanan = pulsaKanan + 1;
+  else pulsaKanan = pulsaKanan - 1;
 }
 
 void setup() {

@@ -30,13 +30,13 @@ volatile long pulsaKiri = 0, pulsaKanan = 0;
 uint8_t nomor = 0; // tujuan yang sedang dituju
 
 void encoderKiri() {
-  if (digitalRead(KIRI_B)) pulsaKiri++;
-  else pulsaKiri--;
+  if (digitalRead(KIRI_B)) pulsaKiri = pulsaKiri + 1;
+  else pulsaKiri = pulsaKiri - 1;
 }
 
 void encoderKanan() {
-  if (digitalRead(KANAN_B)) pulsaKanan++;
-  else pulsaKanan--;
+  if (digitalRead(KANAN_B)) pulsaKanan = pulsaKanan + 1;
+  else pulsaKanan = pulsaKanan - 1;
 }
 
 void motor(uint8_t pinPwm, uint8_t in1, uint8_t in2, int kecepatan) {

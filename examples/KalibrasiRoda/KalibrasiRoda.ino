@@ -30,13 +30,13 @@ long awalKiri = 0, awalKanan = 0;
 float diameterKiri = 6.5, diameterKanan = 6.5, jarakRoda = 15; // perkiraan awal
 
 void encoderKiri() {
-  if (digitalRead(KIRI_B)) pulsaKiri++;
-  else pulsaKiri--;
+  if (digitalRead(KIRI_B)) pulsaKiri = pulsaKiri + 1;
+  else pulsaKiri = pulsaKiri - 1;
 }
 
 void encoderKanan() {
-  if (digitalRead(KANAN_B)) pulsaKanan++;
-  else pulsaKanan--;
+  if (digitalRead(KANAN_B)) pulsaKanan = pulsaKanan + 1;
+  else pulsaKanan = pulsaKanan - 1;
 }
 
 void setup() {

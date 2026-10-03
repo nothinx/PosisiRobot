@@ -5,6 +5,7 @@ static const float DUA_PI = 6.2831853f;
 static const float KE_DERAJAT = 57.2957795f;
 
 static float bungkus360(float d) {
+  if (d >= 0 && d < 360.0f) return d; // paling sering: tanpa fmodf()
   d = fmodf(d, 360.0f);
   if (d < 0) d += 360.0f;
   return d >= 360.0f ? 0 : d; // -0.00001 + 360 bisa dibulatkan jadi 360
@@ -18,7 +19,7 @@ PosisiRobot::PosisiRobot(float diameterRoda, float jarakRoda, float pulsaPerPuta
 void PosisiRobot::aturUkuran(float diameterKiri, float diameterKanan, float jarakRoda) {
   _cmKiri = 3.14159265f * diameterKiri / _pulsa;
   _cmKanan = 3.14159265f * diameterKanan / _pulsa;
-  _jarak = jarakRoda;
+  _perJarak = 1 / jarakRoda;
 }
 
 void PosisiRobot::perbarui(long pulsaKiri, long pulsaKanan) {
@@ -28,18 +29,27 @@ void PosisiRobot::perbarui(long pulsaKiri, long pulsaKanan) {
     // Selisih lewat unsigned agar benar walau counter meluap.
     long dKiri = (long)((unsigned long)pulsaKiri - (unsigned long)_kiriLalu);
     long dKanan = (long)((unsigned long)pulsaKanan - (unsigned long)_kananLalu);
+    if (!dKiri && !dKanan) return; // diam: tidak ada yang berubah
     float sKiri = dKiri * _cmKiri, sKanan = dKanan * _cmKanan;
     float s = (sKiri + sKanan) / 2;
-    float putar = (sKiri - sKanan) / _jarak; // positif = searah jarum jam
+    float putar = (sKiri - sKanan) * _perJarak; // positif = searah jarum jam
     // Robot bergerak di busur lingkaran: perpindahannya adalah tali busur
-    // sepanjang s * sin(h) / h, searah sudut tengah busur.
+    // sepanjang s * sin(h) / h, searah sudut tengah busur. Untuk |h| < 0,1 rad
+    // (hampir selalu, karena perbarui() sering dipanggil) dipakai deret Taylor
+    // 1 - h^2/6 + h^4/120: galatnya < 2e-10, jauh di bawah ketelitian float.
     float h = putar / 2;
-    float tali = fabsf(h) > 1e-4f ? s * sinf(h) / h : s;
+    float h2 = h * h;
+    float tali = h2 < 1e-8f   ? s // lurus
+                 : h2 < 0.01f ? s * (1 - h2 * (1.0f / 6 - h2 * (1.0f / 120)))
+                              : s * sinf(h) / h;
     float a = _sudut + h;
     _x += tali * sinf(a);
     _y += tali * cosf(a);
-    _sudut = fmodf(_sudut + putar, DUA_PI);
-    if (_sudut < 0) _sudut += DUA_PI;
+    _sudut += putar;
+    if (_sudut < 0 || _sudut >= DUA_PI) { // jarang: fmodf() hanya saat melewati 0/360
+      _sudut = fmodf(_sudut, DUA_PI);
+      if (_sudut < 0) _sudut += DUA_PI;
+    }
     _tempuh += fabsf(s);
   }
   _kiriLalu = pulsaKiri;

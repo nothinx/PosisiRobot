@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "PosisiRobot.h"
 
+static const double PI_D = 3.14159265358979323846;
 static bool dekat(float a, float b, float tol = 0.01f) { return fabsf(a - b) <= tol; }
 static bool dekatArah(float a, float b, float tol = 0.01f) {
   float e = fabsf(a - b);
@@ -138,12 +139,51 @@ int main() {
     assert(dekat(r.y(), 10));
     kasus++;
   }
+  { // aturPosisi: posisi ditimpa, arah & jarak tempuh tetap, gerak berlanjut dari titik baru
+    PosisiRobot r = robot();
+    r.perbarui(0, 0);
+    r.aturArah(90);
+    r.perbarui(1000, 1000);         // maju 10 cm ke +X
+    r.aturPosisi(-20, 30);
+    assert(r.x() == -20 && r.y() == 30 && dekatArah(r.arah(), 90) && dekat(r.jarakTempuh(), 10));
+    assert(dekat(r.jarakKe(-20, 40), 10) && dekatArah(r.arahKe(-20, 40), 0));
+    r.perbarui(2000, 2000);         // maju 10 cm lagi
+    assert(dekat(r.x(), -10) && dekat(r.y(), 30));
+    kasus++;
+  }
   { // kalibrasi: roda kanan 1% lebih besar -> maju lurus pada pulsa yang sama terdeteksi belok kiri
     PosisiRobot r = robot();
     r.aturUkuran(10 / 3.14159265f, 10.1f / 3.14159265f, 15);
     r.perbarui(0, 0);
     r.perbarui(10000, 10000);
     assert(r.arah() > 270 && dekat(r.y(), 100.5f, 0.1f));
+    kasus++;
+  }
+  { // jalur cepat (lurus, deret Taylor, putaran besar, lewat 0/360) = rumus busur apa adanya dalam double
+    PosisiRobot r = robot();
+    double x = 0, y = 0, sudut = 0;
+    long k = 0, a = 0;
+    r.perbarui(k, a);
+    unsigned acak = 7;
+    for (int i = 0; i < 3000; i++) {
+      acak = acak * 1103515245u + 12345u;
+      int jenis = acak >> 28; // 0..15
+      long dk = (long)(acak >> 8 & 63) - 20, da = dk; // lurus
+      if (jenis >= 4) da = dk - (long)(acak >> 16 & 15) + 7; // belok kecil: |h| < 0,1
+      if (jenis >= 14) da = -dk * 40 - 900;                  // putar besar: |h| >= 0,1
+      if (jenis == 15) da = dk = 0;                          // diam
+      k += dk;
+      a += da;
+      r.perbarui(k, a);
+      double sk = dk * 0.01, sa = da * 0.01, s = (sk + sa) / 2, putar = (sk - sa) / 15, h = putar / 2;
+      double tali = h != 0 ? s * sin(h) / h : s;
+      x += tali * sin(sudut + h);
+      y += tali * cos(sudut + h);
+      sudut = fmod(sudut + putar, 2 * PI_D);
+      if (sudut < 0) sudut += 2 * PI_D;
+      assert(dekat(r.x(), (float)x, 0.05f) && dekat(r.y(), (float)y, 0.05f));
+      assert(dekatArah(r.arah(), (float)(sudut * 180 / PI_D), 0.01f));
+    }
     kasus++;
   }
   printf("Semua uji lolos (%d kasus, sizeof = %u byte)\n", kasus, (unsigned)sizeof(PosisiRobot));
