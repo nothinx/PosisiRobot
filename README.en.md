@@ -36,6 +36,23 @@ Map-like, with the robot at (0, 0) at start or after `reset()`: heading 0 = +Y (
 
 Checked against the source of other odometry libraries in the Library Manager: DeadReckoning-library takes unsigned counts with a separate direction setting, reads `volatile unsigned long` counters without disabling interrupts, and its bundled example calls the constructor with 5 arguments where 6 are required (fails to compile on the `master` branch). Aerobotix_Arduino_nav blocks in `while` + `delay(10)` loops and estimates position in `go()` as total distance × cos/sin of the current heading instead of tracking x, y.
 
+## Simulation results
+
+![Robot driving a 50 x 50 cm square and a circle, odometry matching the true path](extras/gambar/lintasan.svg)
+
+Simulated two-wheel robot (6.5 cm wheels, 15 cm track, 374 counts per revolution, `perbarui()` every 20 ms); PosisiRobot only sees encoder counts. Left: driving the square with the `KeTitikTujuan` example logic. Right: fixed PWM, one full circle. Final odometry error: 0.03 cm and 0.01 cm.
+
+![True path of a robot whose right wheel is 1 percent larger, before and after calibration](extras/gambar/kalibrasi-roda.svg)
+
+Right wheel 1% larger, three laps of the square. Uncalibrated, the true path rotates and ends 10.1 cm away from the odometry estimate; with `aturUkuran()` (setGeometry) set to the real diameters, 0.1 cm.
+
+The plots come from a PC simulation that runs this library's code (`extras/simulasi`):
+
+```sh
+cd extras/simulasi
+python gambar.py   # needs g++ and matplotlib
+```
+
 ## Function reference
 
 | Indonesian | English | Notes |

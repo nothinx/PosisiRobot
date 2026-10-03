@@ -79,6 +79,23 @@ Kirim **hitungan total** encoder (yang terus naik/turun), bukan selisih sejak pa
 
 Panggil `perbarui()` sesering mungkin (10–50 kali per detik sudah cukup). Panggilan pertama hanya mencatat hitungan awal.
 
+## Hasil simulasi
+
+![Lintasan robot menjalankan kotak 50 x 50 cm dan lingkaran, posisi hasil odometri berhimpit dengan lintasan sebenarnya](extras/gambar/lintasan.svg)
+
+Robot dua roda disimulasikan di PC (roda 6,5 cm, jarak roda 15 cm, encoder 374 pulsa per putaran, `perbarui()` tiap 20 ms). PosisiRobot hanya menerima hitungan encoder. Kiri: robot dikemudikan ke empat titik kotak dengan logika contoh `KeTitikTujuan` (`jarakKe()` dan `selisihArahKe()`). Kanan: PWM tetap, robot melingkar satu putaran. Selisih posisi odometri dan posisi sebenarnya di akhir: 0,03 cm dan 0,01 cm.
+
+![Lintasan sebenarnya robot dengan roda kanan 1 persen lebih besar, sebelum dan sesudah kalibrasi](extras/gambar/kalibrasi-roda.svg)
+
+Roda kanan sebenarnya 1% lebih besar, robot menjalankan kotak yang sama tiga kali. Tanpa kalibrasi, odometri mengira robot tetap di kotak, padahal lintasan sebenarnya (merah) berputar pelan dan di akhir posisinya meleset 10,1 cm dari perkiraan. Dengan `aturUkuran()` berisi diameter yang benar (hasil `KalibrasiRoda`), selisihnya 0,1 cm.
+
+Grafik dibuat dari simulasi di PC yang menjalankan kode library ini (`extras/simulasi`):
+
+```sh
+cd extras/simulasi
+python gambar.py   # butuh g++ dan matplotlib
+```
+
 ## Referensi fungsi
 
 ### Dasar
