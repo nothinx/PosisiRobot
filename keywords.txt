@@ -1,0 +1,15 @@
+#######################################
+# PosisiRobot
+#######################################
+
+PosisiRobot	KEYWORD1
+
+perbarui	KEYWORD2
+arah	KEYWORD2
+jarakTempuh	KEYWORD2
+jarakKe	KEYWORD2
+arahKe	KEYWORD2
+selisihArahKe	KEYWORD2
+aturArah	KEYWORD2
+reset	KEYWORD2
+aturUkuran	KEYWORD2
