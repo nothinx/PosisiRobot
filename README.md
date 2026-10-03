@@ -17,7 +17,7 @@ posisi.selisihArahKe(50, 100);   // belok berapa derajat ke titik (50, 100)?
 - **Hitungan encoder kumulatif**, bukan selisih: tidak ada pulsa yang hilang walau `perbarui()` terlambat dipanggil.
 - **Aman saat counter `long` meluap.**
 - **Integrasi busur eksak**: gerak melengkung dihitung sebagai busur lingkaran, bukan garis lurus, jadi tidak ada galat tambahan walau `perbarui()` jarang dipanggil.
-- **Koreksi arah dari IMU** lewat `aturArah()`.
+- **Koreksi arah dari IMU** lewat `aturArah()`, dan **koreksi posisi** dari penanda lewat `aturPosisi()`.
 - **Kalibrasi roda**: diameter roda kiri & kanan boleh berbeda (`aturUkuran()`), plus contoh cara mengukurnya.
 - Hanya 41 byte RAM. Tanpa `delay()`, tanpa interrupt di dalam library, jadi bebas dipakai dengan library encoder apa pun.
 
@@ -96,6 +96,29 @@ cd extras/simulasi
 python gambar.py   # butuh g++ dan matplotlib
 ```
 
+## Kecepatan & memori
+
+Diukur dengan simavr (simulator ATmega328P yang akurat per siklus) di Arduino Uno 16 MHz: roda 6,5 cm, jarak roda 15 cm, 360 pulsa per putaran, tiap panggilan roda bergerak beberapa pulsa. Pembanding: DeadReckoning-library 1.0.0 (Jae An) dengan robot yang sama.
+
+| | PosisiRobot 1.1.0 | PosisiRobot 1.0.0 | DeadReckoning 1.0.0 |
+|---|---|---|---|
+| `perbarui()` sambil belok | 6.852 siklus (428 µs) | 8.612 (538 µs) | 12.448 (778 µs) |
+| `perbarui()` lurus | 5.754 (360 µs) | 5.677 (355 µs) | - |
+| `perbarui()` saat diam | 183 (11 µs) | 5.182 (324 µs) | 10.285 (643 µs) |
+| `arah()` | 284 (18 µs) | 344 (22 µs) | - |
+| `selisihArahKe(x, y)` | 4.070 (254 µs) | 4.129 (258 µs) | - |
+| RAM per objek | 41 B | 41 B | 52 B |
+| Flash tambahan | 2.390 B | 2.234 B | 2.164 B |
+
+`perbarui()` O(1) waktu dan memori: satu `sinf()` dan satu `cosf()` untuk arah tengah busur (±1.300 siklus masing-masing di AVR). Optimasi di 1.1.0 (posisi sama dengan rumus busur dalam `double` sampai 0,05 cm setelah 3.000 langkah acak, diuji di `extras/test`):
+- Roda tidak bergerak: langsung kembali, tanpa trigonometri.
+- `sin(h)/h` untuk putaran kecil per panggilan (|h| < 0,1 rad, hampir selalu) memakai deret Taylor tiga suku, bukan `sinf()` + pembagian. Galatnya < 2·10⁻¹⁰.
+- `fmodf()` hanya saat arah melewati 0/360°, dan jarak roda disimpan sebagai kebalikannya (perkalian, bukan pembagian).
+
+Di mana kita kalah: flash ±230 B lebih besar daripada DeadReckoning, untuk integrasi busur eksak, `jarakTempuh()`, fungsi navigasi ke titik, dan arah dalam derajat. Jalur lurus tetap ±5.700 siklus karena `sinf()`/`cosf()` arah robot tetap dibutuhkan; menyimpan sin/cos arah akan menambah 8 byte RAM dan galat yang menumpuk, jadi tidak dilakukan.
+
+Mengulang pengukuran: sketch `extras/benchmark/PosisiRobotBenchmark` (butuh simavr).
+
 ## Referensi fungsi
 
 ### Dasar
@@ -128,6 +151,7 @@ python gambar.py   # butuh g++ dan matplotlib
 | Fungsi | Keterangan |
 |---|---|
 | `void aturArah(float derajat)` | Timpa arah, misalnya dengan arah dari IMU. |
+| `void aturPosisi(float x, float y)` | Timpa posisi (cm), misalnya saat robot melewati penanda yang letaknya diketahui. Arah dan jarak tempuh tidak berubah. |
 | `void aturUkuran(float diameterKiri, float diameterKanan, float jarakRoda)` | Hasil kalibrasi (contoh `KalibrasiRoda`). |
 
 ## Menggabungkan dengan ArahMPU6050
@@ -194,7 +218,7 @@ g++ -std=c++11 -I. -I../../src uji.cpp ../../src/PosisiRobot.cpp -o uji && ./uji
 
 ## Status
 
-Versi 1.0.0 sudah lolos uji logika otomatis dan compile di 7 board, tapi **belum diuji di robot sungguhan**. Jika menemukan masalah, silakan buka *issue* di GitHub.
+Versi 1.1.0 sudah lolos uji logika otomatis dan compile di 7 board, tapi **belum diuji di robot sungguhan**. Jika menemukan masalah, silakan buka *issue* di GitHub.
 
 ## Lisensi
 

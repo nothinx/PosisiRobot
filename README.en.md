@@ -53,6 +53,20 @@ cd extras/simulasi
 python gambar.py   # needs g++ and matplotlib
 ```
 
+## Speed & memory
+
+Measured with simavr (cycle-accurate ATmega328P simulator), Arduino Uno 16 MHz: 6.5 cm wheels, 15 cm track, 360 pulses per revolution.
+
+| | PosisiRobot 1.1.0 | 1.0.0 | DeadReckoning 1.0.0 |
+|---|---|---|---|
+| `perbarui()` turning | 6,852 cycles (428 µs) | 8,612 | 12,448 |
+| `perbarui()` straight | 5,754 (360 µs) | 5,677 | - |
+| `perbarui()` standing still | 183 (11 µs) | 5,182 | 10,285 |
+| RAM per object | 41 B | 41 B | 52 B |
+| Extra flash | 2,390 B | 2,234 B | 2,164 B |
+
+`perbarui()` is O(1). Since 1.1.0 it returns early when the wheels did not move, uses a 3-term Taylor series for `sin(h)/h` on small per-call turns (error < 2e-10), and calls `fmodf()` only when the heading wraps. DeadReckoning is ~230 B smaller in flash. Benchmark sketch: `extras/benchmark/PosisiRobotBenchmark`.
+
 ## Function reference
 
 | Indonesian | English | Notes |
@@ -66,6 +80,7 @@ python gambar.py   # needs g++ and matplotlib
 | `arahKe(x, y)` | bearing to | 0–360 |
 | `selisihArahKe(x, y)` | heading error to | −180..180, positive = turn right |
 | `aturArah(derajat)` | setHeading(degrees) | e.g. from an IMU |
+| `aturPosisi(x, y)` | setPosition(x, y) | cm, e.g. at a known landmark; heading unchanged |
 | `reset()` | reset | position and heading to 0 |
 | `aturUkuran(diameterKiri, diameterKanan, jarakRoda)` | setGeometry(leftDiameter, rightDiameter, trackWidth) | calibration |
 
@@ -75,7 +90,7 @@ python gambar.py   # needs g++ and matplotlib
 
 ## Status
 
-Version 1.0.0 passes automated logic tests and compiles on Uno, Mega, ESP32, ESP32-C3, ESP32-S3, STM32 Blackpill F411, and Bluepill F103. It has **not yet been tested on a real robot**.
+Version 1.1.0 passes automated logic tests and compiles on Uno, Mega, ESP32, ESP32-C3, ESP32-S3, STM32 Blackpill F411, and Bluepill F103. It has **not yet been tested on a real robot**.
 
 ## License
 
